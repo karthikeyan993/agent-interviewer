@@ -2,6 +2,8 @@
 
 Display your learning progress and identify weak areas.
 
+**Important**: This is a read-only command. Do NOT ask the user any questions. Just read the data files and display the dashboard immediately.
+
 ## Usage
 
 ```
@@ -45,10 +47,35 @@ Streak: 3 weeks of consistent reviews
 ## Calculations
 
 ### Mastery Percentage
-For each topic/category:
+
+For each topic/category, only include questions that have been reviewed (confidence is not null):
+
 ```python
-mastery = avg(latest_confidence for each question) / 5 * 100
+def calculate_mastery(questions, group_by):
+    """
+    Calculate mastery for a group of questions.
+    Excludes questions with null confidence (never reviewed).
+    """
+    reviewed = [q for q in questions if q.confidence is not None]
+
+    if not reviewed:
+        return 0, 0  # 0% mastery, 0 reviewed questions
+
+    total_confidence = sum(q.confidence for q in reviewed)
+    mastery = (total_confidence / len(reviewed)) / 5 * 100
+
+    return mastery, len(reviewed)
+
+# For topic mastery
+for topic in unique_topics:
+    topic_questions = [q for q in questions if q.topic == topic]
+    mastery, count = calculate_mastery(topic_questions, 'topic')
+    # Display: topic [progress_bar] mastery% (count questions)
 ```
+
+**Handling null confidence:**
+- Questions with `confidence: null` are excluded from mastery calculations
+- Show count of unreviewed questions separately if any exist
 
 ### Questions Due
 ```python
@@ -56,13 +83,11 @@ due = [q for q in questions if q.next_review_date <= today]
 ```
 
 ### Weekly Progress
+
+Before reading, check for week reset (see `goal.md` → Week Reset Logic).
+
 Read from `goals.json`:
 - `reviews_this_week / weekly_target`
-
-### Week Reset
-If `current_week_start` is more than 7 days ago:
-- Reset `reviews_this_week` to 0
-- Update `current_week_start` to current Monday
 
 ## Visual Elements
 
@@ -70,3 +95,12 @@ Use simple ASCII progress bars:
 - `[==========]` for 100%
 - `[======----]` for 60%
 - `[===-------]` for 30%
+
+## Edge Cases
+
+Handle missing data gracefully without asking questions:
+- **No goal set**: Show "No weekly goal set. Use /goal to set one."
+- **No questions**: Show "No questions in bank. Use /add to add some."
+- **No reviews yet**: Show "No reviews yet this week."
+- **Unreviewed questions**: Show "X questions not yet reviewed" below the mastery section
+- **All questions unreviewed**: Show "No mastery data yet. Complete some reviews to see progress."

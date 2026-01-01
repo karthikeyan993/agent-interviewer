@@ -41,17 +41,21 @@ When given a title with flags:
 2. Add to question bank as above
 
 ## Fields Set on Add
+
+Validate topic and difficulty against `data/config.json` → `valid_values`:
+
 - id (generated UUID)
 - title
-- topic
-- difficulty
+- topic (must be in `config.valid_values.topics`)
+- difficulty (must be in `config.valid_values.difficulties`)
 - description (if available)
 - leetcode_url / neetcode_url
 - hints (if available from source)
-- ease_factor: 2.5
+- ease_factor: `config.sm2.initial_ease_factor` (default: 2.5)
 - interval_days: 0
 - next_review_date: today
 - review_count: 0
+- confidence: null (set during first review)
 
 ## Fields Set During Review
 - pattern (how you solved it)
