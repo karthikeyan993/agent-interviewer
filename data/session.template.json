@@ -2,5 +2,13 @@
   "active": false,
   "question_id": null,
   "started_at": null,
-  "hints_used": 0
+  "hints_given": 0,
+  "mode": null,
+  "confidence_before": null,
+  "assessment": {
+    "solved": null,
+    "time_complexity_correct": null,
+    "space_complexity_correct": null,
+    "edge_cases_handled": null
+  }
 }
