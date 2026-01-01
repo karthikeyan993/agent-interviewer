@@ -20,7 +20,7 @@ A spaced repetition system for DSA interview preparation, powered by Claude Code
 1. Clone this repository:
    ```bash
    git clone <repo-url>
-   cd interview
+   cd agent-interviewer
    ```
 
 2. Initialize your personal data files from templates:
