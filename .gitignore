@@ -1,0 +1,10 @@
+# Personal data (contains your review history)
+data/questions.json
+data/session.json
+data/goals.json
+
+# Working solution file
+solution.py
+
+# Local Claude settings
+.claude/settings.local.json
