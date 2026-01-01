@@ -5,13 +5,33 @@ Begin a mock FAANG interview session with a question from your bank.
 ## Usage
 
 ```
-/review                           # Random, spaced-rep prioritized
-/review --topic=graphs            # Filter by topic
-/review --pattern=sliding-window  # Filter by pattern
-/review --company=google          # Filter by company
-/review --difficulty=hard         # Filter by difficulty
-/review --weak                    # Only low confidence (<=2)
+/review                     # Random, spaced-rep prioritized
+/review arrays              # Filter by topic (simple)
+/review graphs              # Filter by topic (simple)
+/review hard                # Filter by difficulty
+/review weak                # Only low confidence (<=2)
+/review sliding-window      # Filter by pattern
 ```
+
+**Argument**: $ARGUMENTS
+
+## Argument Parsing
+
+Parse the argument naturally:
+- If empty: no filter, use spaced-rep priority
+- If matches a **topic** (arrays, strings, trees, graphs, dp, linked-list, etc.): filter by topic
+- If matches a **difficulty** (easy, medium, hard): filter by difficulty
+- If matches a **pattern** (two-pointers, sliding-window, bfs, dfs, backtracking, etc.): filter by pattern
+- If "weak" or "low": filter confidence <= 2
+- If matches a **company** name (google, meta, amazon, etc.): filter by company
+
+Common topic aliases:
+- "array" → "arrays"
+- "string" → "strings"
+- "tree" → "trees"
+- "graph" → "graphs"
+- "linkedlist" or "linked list" → "linked-list"
+- "dynamic programming" → "dp"
 
 ## Question Selection Algorithm
 

@@ -5,14 +5,29 @@ View and filter your saved questions.
 ## Usage
 
 ```
-/list                        # All questions
-/list --topic=dp             # Filter by topic
-/list --pattern=two-pointers # Filter by pattern
-/list --difficulty=hard      # Filter by difficulty
-/list --company=google       # Filter by company
-/list --due                  # Only questions due for review
-/list --weak                 # Only low confidence (<=2)
+/list                  # All questions
+/list dp               # Filter by topic
+/list graphs           # Filter by topic
+/list hard             # Filter by difficulty
+/list due              # Only questions due for review
+/list weak             # Only low confidence (<=2)
+/list google           # Filter by company
 ```
+
+**Argument**: $ARGUMENTS
+
+## Argument Parsing
+
+Parse the argument naturally:
+- If empty: show all questions
+- If matches a **topic**: filter by topic
+- If matches a **difficulty** (easy, medium, hard): filter by difficulty
+- If matches a **pattern**: filter by pattern
+- If "due" or "today": filter by next_review_date <= today
+- If "weak" or "low": filter confidence <= 2
+- If matches a **company** name: filter by company
+
+Use same topic aliases as /review (array→arrays, etc.)
 
 ## Output Format
 
