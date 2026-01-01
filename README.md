@@ -23,7 +23,7 @@ A spaced repetition system for DSA interview preparation, powered by Claude Code
    ```
 4. Start Claude Code in the project directory:
    ```bash
-   cd interview
+   cd agent-interviewer
    claude
    ```
 
