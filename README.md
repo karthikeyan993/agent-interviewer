@@ -32,9 +32,11 @@ Choose your platform:
 
 2. Initialize your personal data files from templates:
    ```bash
-   cp data/questions.template.json data/questions.json
    cp data/session.template.json data/session.json
    cp data/goals.template.json data/goals.json
+   cp data/index.template.json data/index.json
+   cp data/review-queue.template.json data/review-queue.json
+   cp data/stats-cache.template.json data/stats-cache.json
    touch solution.py
    ```
 
@@ -68,9 +70,11 @@ Choose your platform:
 
 2. Initialize your personal data files from templates:
    ```bash
-   cp data/questions.template.json data/questions.json
    cp data/session.template.json data/session.json
    cp data/goals.template.json data/goals.json
+   cp data/index.template.json data/index.json
+   cp data/review-queue.template.json data/review-queue.json
+   cp data/stats-cache.template.json data/stats-cache.json
    touch solution.py
    ```
 
@@ -87,7 +91,10 @@ Choose your platform:
    ```
 
 ### What's Tracked (gitignored)
-- `data/questions.json` - Your question bank and review history
+- `data/questions/*.json` - Your question bank (sharded by topic)
+- `data/index.json` - Minimal lookup table for fast filtering
+- `data/review-queue.json` - Pre-sorted review candidates
+- `data/stats-cache.json` - Pre-computed mastery statistics
 - `data/session.json` - Current session state
 - `data/goals.json` - Your weekly goals and progress
 - `solution.py` - Your working solution file
@@ -95,6 +102,7 @@ Choose your platform:
 ### What's Shared (committed)
 - `data/config.json` - SM-2 algorithm settings, time thresholds, valid topics/patterns
 - `data/*.template.json` - Templates for initializing data files
+- `data/questions/template.json` - Template for topic files
 - `.claude/commands/` - Skill definitions (Claude Code)
 - `.opencode/command/` - Skill definitions (OpenCode)
 - `CLAUDE.md` - Instructions for Claude Code
@@ -185,22 +193,42 @@ Use `/hint` during a session for progressive hints. Using hints caps your maximu
 ## File Structure
 
 ```
-interview/
+agent-interviewer/
 ├── .claude/
 │   └── commands/         # Skill definitions (Claude Code)
 ├── .opencode/
 │   └── command/          # Skill definitions (OpenCode)
 ├── data/
-│   ├── questions.json    # Your question bank (gitignored)
+│   ├── questions/        # Topic-sharded question storage
+│   │   ├── template.json # Template for topic files
+│   │   ├── arrays.json   # Questions for arrays topic (gitignored)
+│   │   ├── dp.json       # Questions for dp topic (gitignored)
+│   │   └── ...           # Other topic files created as needed
+│   ├── index.json        # Minimal lookup table (gitignored)
+│   ├── review-queue.json # Pre-sorted review candidates (gitignored)
+│   ├── stats-cache.json  # Pre-computed stats (gitignored)
 │   ├── session.json      # Active session state (gitignored)
 │   ├── goals.json        # Weekly goals (gitignored)
-│   ├── config.json       # Configuration (SM-2 params, thresholds, valid values)
+│   ├── config.json       # Configuration (SM-2 params, thresholds)
 │   └── *.template.json   # Templates for data files
 ├── solution.py           # Your working solution file (gitignored)
 ├── CLAUDE.md             # Instructions for Claude Code
 ├── OPENCODE.md           # Instructions for OpenCode
 └── README.md
 ```
+
+### Data Architecture
+
+The system uses an optimized architecture for efficient token usage:
+
+| File | Purpose | Size |
+|------|---------|------|
+| `index.json` | Minimal lookup: `{id: {t, d, c, n}}` | ~15 tokens/question |
+| `review-queue.json` | Pre-sorted top 30 candidates | ~500 tokens |
+| `stats-cache.json` | Pre-computed mastery stats | ~300 tokens |
+| `questions/{topic}.json` | Full question data by topic | ~300 tokens/question |
+
+This reduces token usage by ~90% compared to loading all questions for each command.
 
 ## Configuration
 
