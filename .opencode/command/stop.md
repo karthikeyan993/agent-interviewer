@@ -56,3 +56,11 @@ Cancel the current interview session without affecting your stats or review sche
 - Started wrong question
 - Want to restart fresh
 - Testing/debugging the system
+- Clear a stale/abandoned session manually
+
+## Note on Stale Sessions
+
+If a session was abandoned (exited without /done or /stop), running /review will:
+- Auto-clear sessions older than 24 hours
+- Prompt to resume or cancel sessions 4-24 hours old
+- For recent sessions, you'll need to use /stop to clear them first

@@ -35,6 +35,10 @@
   "week": {
     "start_day": "monday"
   },
+  "session": {
+    "stale_timeout_hours": 4,
+    "auto_cancel_hours": 24
+  },
   "valid_values": {
     "topics": [
       "arrays", "strings", "trees", "graphs", "dp", "linked-list",

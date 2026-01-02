@@ -28,8 +28,33 @@ Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, l
 
 ## Behavior
 
-1. Check if session already active (`session.json` → `active: true`)
-   - If active: "Session in progress. Use /done to end or /stop to cancel."
+1. **Check for existing session** (`session.json` → `active: true`):
+
+   If active, calculate session age from `started_at`:
+
+   **a) Auto-cancel stale sessions** (age >= `config.session.auto_cancel_hours`):
+   - Reset session.json to inactive state silently
+   - Log: "Previous session from [date] was abandoned and has been cleared."
+   - Continue to start new session
+
+   **b) Prompt for stale sessions** (age >= `config.session.stale_timeout_hours`):
+   - Read question title from `data/questions/{topic}.json`
+   - Ask user:
+     ```
+     Found incomplete session from [X hours/days ago]:
+     Problem: [title]
+     Time spent: [Y minutes]
+
+     What would you like to do?
+     1. Resume - Continue where you left off
+     2. Cancel - Clear session and start fresh
+     ```
+   - If Resume: Present the question again in interviewer mode, continue session
+   - If Cancel: Reset session.json, then continue to select new question
+
+   **c) Active recent session** (age < `config.session.stale_timeout_hours`):
+   - "Session in progress. Use /done to end or /stop to cancel."
+   - Do not proceed
 
 2. **Read review-queue.json** (pre-sorted by priority)
 
