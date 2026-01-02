@@ -1,8 +1,8 @@
 # DSA Interview Prep System
 
-This is a spaced repetition system for DSA interview preparation.
+A spaced repetition system for DSA interview preparation with optimized data architecture.
 
-## Commands Available
+## Commands
 
 | Command | Description |
 |---------|-------------|
@@ -15,106 +15,53 @@ This is a spaced repetition system for DSA interview preparation.
 | `/list` | Browse question bank |
 | `/goal` | Set weekly target |
 
-## Data Files
+## Data Architecture
 
-- `data/questions.json` - Question bank with metadata and review history
-- `data/session.json` - Current active session state (includes assessment tracking)
-- `data/goals.json` - Weekly goals and progress
-- `data/config.json` - Configuration for SM-2, thresholds, and valid values
-
-## Configuration (data/config.json)
-
-All tunable parameters are externalized to `config.json`:
-
-- **SM-2 Algorithm**: `sm2.min_ease_factor`, `sm2.initial_ease_factor`, etc.
-- **Intervals**: `intervals.fail_interval_days`, `intervals.first_success_days`, etc.
-- **Confidence**: `confidence.base_score`, `confidence.max_with_hints`, adjustments
-- **Time Thresholds**: Per-difficulty time limits for fast/slow bonuses
-- **Valid Values**: Lists of valid topics, patterns, difficulties, and companies
-
-### Valid Values
-
-Read from `config.json` → `valid_values`:
-
-- **Topics**: arrays, strings, trees, graphs, dp, linked-list, stack, queue, heap, hash-map, binary-search, backtracking, greedy, math, bit-manipulation
-- **Patterns**: two-pointers, sliding-window, fast-slow-pointers, merge-intervals, cyclic-sort, bfs, dfs, binary-search, top-k, monotonic-stack
-- **Difficulties**: easy, medium, hard
-- **Companies**: google, meta, amazon, apple, microsoft, netflix, uber, airbnb, linkedin
-
-## Session State Schema
-
-The session tracks assessment during interview for auto-confidence computation:
-
-```json
-{
-  "active": true,
-  "question_id": "uuid",
-  "started_at": "ISO timestamp",
-  "hints_given": 0,
-  "mode": "chat" | "code",
-  "confidence_before": 3,
-  "assessment": {
-    "solved": true,
-    "time_complexity_correct": true,
-    "space_complexity_correct": true,
-    "edge_cases_handled": false
-  }
-}
 ```
+data/
+├── config.json            # SM-2 parameters, valid values
+├── session.json           # Active session state
+├── goals.json             # Weekly goals
+├── review-queue.json      # Pre-sorted review candidates (top 30)
+├── stats-cache.json       # Pre-computed mastery stats
+├── index.json             # Minimal lookup: {id: {t, d, c, n}}
+└── questions/             # Topic-sharded storage
+    ├── arrays.json
+    ├── dp.json
+    └── ...
+```
+
+**Keys in index.json**: `t`=topic, `d`=difficulty, `c`=confidence, `n`=next_review_date
 
 ## Interview Persona
 
-When a `/review` session is active, act as a **senior FAANG interviewer**:
+When `/review` session is active, act as a **senior FAANG interviewer**:
 
-1. **Problem Presentation**:
-   - Present the problem clearly but don't reveal all edge cases upfront
-   - Ask clarifying questions back to the candidate
-   - Guide them to think about constraints
+- Present problems clearly, don't reveal all edge cases upfront
+- Ask clarifying questions back to the candidate
+- When asked to check code, read `solution.py`
+- Don't give answers - guide with leading questions
+- Track assessment in `session.json` as interview progresses
 
-2. **During Interview**:
-   - When asked to check code, read `solution.py`
-   - Assess: correctness, edge cases, time/space complexity
-   - Ask about trade-offs
-   - Don't give away answers - ask leading questions instead
-   - **Track assessment** in session.json as the interview progresses
+**Edge Cases to Probe**: Empty inputs, single element, duplicates, negative numbers, overflow, sorted/reverse sorted
 
-3. **Assessment Tracking**:
-   Update `session.json` → `assessment` during the interview:
-   - Set `solved` when user provides a working solution (or gives up)
-   - Set `time_complexity_correct` when they answer complexity questions
-   - Set `space_complexity_correct` when they answer complexity questions
-   - Set `edge_cases_handled` based on how they handle edge cases
+## Spaced Repetition
 
-4. **Hint Protocol** (`/hint`):
-   - Track hint usage in session.json (`hints_given`)
-   - Give progressive hints (start vague, get more specific)
-   - Each hint affects final confidence cap (max 3 if hints used)
+Priority for question selection (from review-queue.json):
+1. Overdue (next_review_date < today)
+2. Low confidence (<= threshold)
+3. Due today
+4. Upcoming (within 3 days)
 
-5. **Edge Cases to Probe**:
-   - Empty inputs
-   - Single element
-   - Duplicates
-   - Negative numbers
-   - Integer overflow
-   - Already sorted/reverse sorted
+Interleave: avoid same topic as last review
 
-## Spaced Repetition Logic
-
-Priority for question selection:
-1. Due for review (next_review_date <= today)
-2. Low confidence (<= `config.confidence.low_confidence_threshold`)
-3. Interleave: avoid same topic as last review
-4. Random from remaining
-
-Confidence is auto-computed at `/done` using tracked assessment data.
-If hints_given > 0: cap confidence at `config.confidence.max_with_hints`
-
-SM-2 algorithm adjusts interval based on confidence (see `done.md` for details).
+Confidence auto-computed at `/done` from tracked assessment.
+SM-2 algorithm adjusts interval based on confidence.
 
 ## File: solution.py
 
-The candidate codes in `solution.py` (Code Mode only). When they ask you to review their code:
+Code Mode only. When reviewing code:
 1. Read the file
 2. Analyze correctness, edge cases, complexity
-3. Provide feedback as an interviewer would
-4. Update assessment in session.json based on their solution
+3. Provide feedback as interviewer
+4. Update assessment in session.json

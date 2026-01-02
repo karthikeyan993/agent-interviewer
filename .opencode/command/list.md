@@ -1,5 +1,5 @@
 ---
-description: Browse question bank (project)
+description: Browse your question bank (project)
 ---
 
 # /list - Browse your question bank
@@ -11,7 +11,6 @@ View and filter your saved questions.
 ```
 /list                  # All questions
 /list dp               # Filter by topic
-/list graphs           # Filter by topic
 /list hard             # Filter by difficulty
 /list due              # Only questions due for review
 /list weak             # Only low confidence (<=2)
@@ -20,20 +19,26 @@ View and filter your saved questions.
 
 **Argument**: $ARGUMENTS
 
-## Argument Parsing
+## Behavior
 
-Parse the argument naturally:
-- If empty: show all questions
-- If matches a **topic**: filter by topic
-- If matches a **difficulty** (easy, medium, hard): filter by difficulty
-- If matches a **pattern**: filter by pattern
-- If "due" or "today": filter by next_review_date <= today
-- If "weak" or "low": filter confidence <= 2
-- If matches a **company** name: filter by company
+1. Read `data/index.json` (minimal lookup table)
 
-Use same topic aliases as /review (array→arrays, etc.)
+2. Parse argument:
+   - If empty: show all
+   - If matches **topic**: filter by `t` field
+   - If matches **difficulty**: filter by `d` field
+   - If "due" or "today": filter by `n` <= today
+   - If "weak" or "low": filter by `c` <= 2
 
-## Output Format
+3. For **pattern** or **company** filters:
+   - Read relevant `data/questions/{topic}.json` files to check
+
+4. Sort by `n` (next_review_date) - most overdue first
+
+5. For display details (title, pattern, companies):
+   - Read needed `data/questions/{topic}.json` files
+
+6. Display results:
 
 ```
 Question Bank (15 questions)
@@ -64,12 +69,12 @@ Use /list --all to see complete list
 
 ## Legend
 
-- `[E]` = Easy (green)
-- `[M]` = Medium (yellow)
-- `[H]` = Hard (red)
+- `[E]` = Easy
+- `[M]` = Medium
+- `[H]` = Hard
 
 ## Sorting
 
-Default sort: Due date (most overdue first)
+Default: Due date (most overdue first)
 
-Questions not yet reviewed appear at the bottom (ready for first review).
+Questions not yet reviewed appear at the bottom.

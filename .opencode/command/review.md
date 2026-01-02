@@ -10,8 +10,7 @@ Begin a mock FAANG interview session with a question from your bank.
 
 ```
 /review                     # Random, spaced-rep prioritized
-/review arrays              # Filter by topic (simple)
-/review graphs              # Filter by topic (simple)
+/review arrays              # Filter by topic
 /review hard                # Filter by difficulty
 /review weak                # Only low confidence (<=2)
 /review sliding-window      # Filter by pattern
@@ -25,76 +24,50 @@ Begin a mock FAANG interview session with a question from your bank.
 ## Argument Parsing
 
 Read valid values from `data/config.json` → `valid_values`:
-
-- If empty: no filter, use spaced-rep priority
-- If matches a **topic** from `config.valid_values.topics`: filter by topic
-- If matches a **difficulty** from `config.valid_values.difficulties`: filter by difficulty
-- If matches a **pattern** from `config.valid_values.patterns`: filter by pattern
-- If "weak" or "low": filter confidence <= `config.confidence.low_confidence_threshold`
-- If matches a **company** from `config.valid_values.companies`: filter by company
+- If empty: no filter, use priority order
+- If matches **topic**: filter by topic
+- If matches **difficulty**: filter by difficulty
+- If matches **pattern**: filter by pattern (requires reading topic files)
+- If "weak" or "low": filter confidence <= threshold
+- If matches **company**: filter by company (requires reading topic files)
 - If contains `--mode=chat`: Use Chat Mode
 - If contains `--mode=code`: Use Code Mode
 
-Common topic aliases:
-- "array" → "arrays"
-- "string" → "strings"
-- "tree" → "trees"
-- "graph" → "graphs"
-- "linkedlist" or "linked list" → "linked-list"
-- "dynamic programming" → "dp"
+Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, linkedlist→linked-list, dynamic programming→dp
 
-## Question Selection Algorithm
+## Behavior
 
-Priority order:
-1. **Due for review**: `next_review_date <= today`
-2. **Low confidence**: confidence <= `config.confidence.low_confidence_threshold`
-3. **Interleaving**: Avoid same topic as `last_reviewed_topic` in questions.json
-4. **Random**: From remaining pool
+1. Check if session already active (`session.json` → `active: true`)
+   - If active: "Session in progress. Use /done to end or /stop to cancel."
 
-Apply any filters first, then use priority order.
+2. **Read review-queue.json** (pre-sorted by priority)
 
-### Interleaving Fallback
+3. **Apply filters** from argument:
+   - Filter queue by topic/difficulty if specified
+   - For pattern/company filters: read needed topic files to check
 
-When applying interleaving (step 3):
-1. Get `last_reviewed_topic` from questions.json
-2. Filter candidate questions to exclude that topic
-3. If no candidates remain after filtering:
-   - Note: "All available questions are in the same topic, proceeding anyway"
-   - Use the full candidate list without topic filtering
-4. Continue with remaining priority rules
+4. **Apply interleaving**:
+   - Skip if `topic == last_reviewed_topic` (unless only option)
 
-## Session Start Procedure
+5. **Select first matching candidate** from filtered queue
 
-1. Check if session already active (`data/session.json` -> `active: true`)
-   - If active, warn: "Session in progress. Use /done to end it first, or /stop to cancel."
+6. **Read question details** from `data/questions/{topic}.json` → find by id
 
-2. Select question using algorithm above
+7. **Determine mode**:
+   - If `--mode=chat`: Use Chat Mode
+   - If `--mode=code`: Use Code Mode
+   - Otherwise: Ask user to reply with "chat" or "code"
 
-3. **Capture confidence_before**: Read the selected question's current `confidence` value
-
-4. **Determine solving mode**:
-
-   Parse $ARGUMENTS for --mode flag:
-   - If contains `--mode=chat`: Use Chat Mode
-   - If contains `--mode=code`: Use Code Mode
-   - If no --mode flag:
-     a. Display: "Choose solving mode (reply 'chat' or 'code'):"
-     b. Describe both modes:
-        - **Chat Mode**: Solve through conversation only. Discuss approach, pseudocode, and logic verbally. Good for conceptual review or when away from IDE.
-        - **Code Mode**: Code in `solution.py` file. Still asked about time/space complexity, trade-offs, edge cases. Full coding interview experience.
-     c. In your next message, respond with "chat" or "code"
-     d. Parse user's response for keywords "chat" or "code"
-     e. Default to Chat Mode if unclear
-
-5. Update `data/session.json` with full state:
+8. **Update session.json**:
    ```json
    {
      "active": true,
-     "question_id": "<selected-id>",
+     "question_id": "<id>",
+     "topic": "<topic>",
      "started_at": "<ISO timestamp>",
      "hints_given": 0,
-     "mode": "chat" | "code",
-     "confidence_before": <question's current confidence or null if never reviewed>,
+     "mode": "chat|code",
+     "confidence_before": <current confidence or null>,
      "assessment": {
        "solved": null,
        "time_complexity_correct": null,
@@ -104,27 +77,12 @@ When applying interleaving (step 3):
    }
    ```
 
-6. **If Code Mode**: Update `solution.py` header with problem info:
-   ```python
-   """
-   DSA Interview Solution
+9. **If Code Mode**: Update `solution.py` header with problem info
 
-   Problem: Two Sum
-   Topic: arrays
-   Pattern: hash-map
-   Difficulty: easy
-
-   Commands:
-     /hint  - Get a hint (tracked)
-     /done  - End session and record assessment
-     /stop  - Cancel session without recording
-   """
-   ```
-
-7. Present problem as FAANG interviewer:
-   - State the problem clearly
-   - Ask: "Before we start, do you have any clarifying questions?"
-   - Don't reveal all constraints/edge cases upfront
+10. **Present problem as FAANG interviewer**:
+    - State problem clearly
+    - Ask: "Before we start, any clarifying questions?"
+    - Don't reveal all constraints upfront
 
 ## Interview Persona
 
@@ -132,44 +90,35 @@ Act as a senior FAANG interviewer:
 - Be professional but friendly
 - Ask probing questions about approach
 - Push on edge cases and complexity
-- Don't give answers directly - guide with questions
+- Don't give answers - guide with questions
 
-### Chat Mode Behavior
-- Ask them to explain their approach step by step
+### Chat Mode
+- Ask for step-by-step approach explanation
 - Request pseudocode or verbal walkthrough
-- Probe: "What's the time complexity of that approach?"
-- Probe: "How would you handle [edge case]?"
-- Ask them to trace through an example verbally
+- Probe complexity and edge cases
 
-### Code Mode Behavior
-- When they ask you to review code, read `solution.py` and give feedback
-- After code review, still ask:
-  - "What's the time and space complexity?"
-  - "What edge cases should we test?"
-  - "Are there any trade-offs with this approach?"
-  - "Could you optimize this further?"
-- Let them code at their pace, provide feedback when asked
+### Code Mode
+- When asked to review code, read `solution.py` and give feedback
+- Ask about complexity, edge cases, trade-offs
+- Let them code at their pace
 
-## Assessment Tracking During Interview
+## Assessment Tracking
 
-**Important**: As the interview progresses, update `session.json` → `assessment` to track:
+Update `session.json` → `assessment` as interview progresses:
 
 | Field | When to Update |
 |-------|----------------|
-| `solved` | Set to `true` when user provides a working solution, `false` if they give up or ask for the answer |
-| `time_complexity_correct` | Set to `true/false` when user answers time complexity question |
-| `space_complexity_correct` | Set to `true/false` when user answers space complexity question |
-| `edge_cases_handled` | Set to `true` if they handle most edge cases well, `false` if they miss major ones |
-
-This tracked data is used by `/done` to auto-compute confidence.
+| `solved` | `true` when working solution provided, `false` if gave up |
+| `time_complexity_correct` | `true/false` when they answer complexity question |
+| `space_complexity_correct` | `true/false` when they answer complexity question |
+| `edge_cases_handled` | `true` if handled well, `false` if missed major ones |
 
 ## If No Questions Available
 
-If the question bank is empty or no questions match filters:
 ```
 No questions found matching your criteria.
 Use /add to add questions, or try different filters.
 
 Current bank: X questions
-Available topics: arrays, strings, trees, ...
+Due for review: Y questions
 ```

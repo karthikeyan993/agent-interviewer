@@ -1,0 +1,16 @@
+{
+  "computed_at": null,
+  "total_questions": 0,
+  "reviewed_count": 0,
+  "unreviewed_count": 0,
+  "due_count": 0,
+  "mastery_by_topic": {},
+  "mastery_by_difficulty": {
+    "easy": {"mastery": 0, "count": 0, "reviewed": 0},
+    "medium": {"mastery": 0, "count": 0, "reviewed": 0},
+    "hard": {"mastery": 0, "count": 0, "reviewed": 0}
+  },
+  "weakest_areas": [],
+  "recent_reviews": [],
+  "streak_weeks": 0
+}

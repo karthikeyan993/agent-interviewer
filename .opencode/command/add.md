@@ -4,7 +4,7 @@ description: Add a question to the bank (project)
 
 # /add - Add a question to the bank
 
-Add a DSA question for future review. No questions asked - just add it. Evaluation happens during `/review`.
+Add a DSA question for future review. No questions asked - just add it.
 
 ## Usage
 
@@ -24,54 +24,73 @@ Add a DSA question for future review. No questions asked - just add it. Evaluati
 
 ## Behavior
 
-### NeetCode URL Import (Preferred)
-When given a NeetCode URL:
-1. Fetch the problem page using webfetch
-2. Extract: title, difficulty, description, topic/category, and hints if available
-3. Generate UUID and add to `data/questions.json`
-4. Set `next_review_date` to today
-5. Set `ease_factor` to 2.5, `interval_days` to 0
-6. Leave `pattern`, `confidence`, `solution_approach` as null (filled during review)
+1. Parse input:
+   - **NeetCode URL**: Fetch page with webfetch, extract title, difficulty, description, topic, hints
+   - **LeetCode URL**: Extract slug, use knowledge of common problems
+   - **Manual**: Parse title and flags
 
-### LeetCode URL Import
-When given a LeetCode URL:
-1. Extract problem slug from URL
-2. Use knowledge of common problems to get title, difficulty, topic
-3. Add to question bank as above
+2. Validate against `data/config.json` → `valid_values`:
+   - Topic must be in `valid_values.topics`
+   - Difficulty must be in `valid_values.difficulties`
 
-### Manual Entry
-When given a title with flags:
-1. Parse provided flags (topic, difficulty required)
-2. Add to question bank as above
+3. Create question object:
+   ```json
+   {
+     "id": "<generated-uuid>",
+     "title": "Two Sum",
+     "difficulty": "easy",
+     "description": "Given an array...",
+     "hints": [],
+     "leetcode_url": null,
+     "neetcode_url": null,
+     "ease_factor": 2.5,
+     "interval_days": 0,
+     "next_review_date": "<today>",
+     "review_count": 0,
+     "last_reviewed": null,
+     "pattern": null,
+     "confidence": null,
+     "solution_approach": null,
+     "company_tags": [],
+     "reviews": []
+   }
+   ```
 
-## Fields Set on Add
+4. **Write to topic file** (`data/questions/{topic}.json`):
+   - Read existing file (or create from template if doesn't exist)
+   - Append question to `questions` array
+   - Write file
 
-Validate topic and difficulty against `data/config.json` → `valid_values`:
+5. **Update index.json**:
+   - Add entry: `{id: {t: topic, d: difficulty, c: null, n: today}}`
 
-- id (generated UUID)
-- title
-- topic (must be in `config.valid_values.topics`)
-- difficulty (must be in `config.valid_values.difficulties`)
-- description (if available)
-- leetcode_url / neetcode_url
-- hints (if available from source)
-- ease_factor: `config.sm2.initial_ease_factor` (default: 2.5)
-- interval_days: 0
-- next_review_date: today
-- review_count: 0
-- confidence: null (set during first review)
+6. **Update review-queue.json**:
+   - Read existing queue
+   - Add new item (priority 3 = due today, reason "new")
+   - Re-sort by priority
+   - Keep top 30
+   - Write file
 
-## Fields Set During Review
-- pattern (how you solved it)
-- confidence (1-5)
-- solution_approach (your notes)
-- company_tags
+7. **Update stats-cache.json**:
+   - Increment `total_questions`
+   - Increment `unreviewed_count`
+   - Increment `mastery_by_topic[topic].count` (create if needed)
+   - Increment `mastery_by_difficulty[difficulty].count`
+   - Update `computed_at`
 
-## After Adding
+8. Confirm:
+   ```
+   Added: "Two Sum"
+     Topic: arrays | Difficulty: easy
+     Ready for review!
+   ```
 
-Confirm with:
-```
-Added: "Two Sum"
-  Topic: arrays | Difficulty: easy
-  Ready for review!
-```
+## Topic Aliases
+
+Accept common variations:
+- "array" → "arrays"
+- "string" → "strings"
+- "tree" → "trees"
+- "graph" → "graphs"
+- "linkedlist" or "linked list" → "linked-list"
+- "dynamic programming" → "dp"

@@ -1,6 +1,7 @@
 {
   "active": false,
   "question_id": null,
+  "topic": null,
   "started_at": null,
   "hints_given": 0,
   "mode": null,

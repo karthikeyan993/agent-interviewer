@@ -6,7 +6,7 @@ description: End session and record assessment (project)
 
 Complete the current interview session and update your progress.
 
-**Important**: Do NOT ask the user for confidence. Compute it automatically based on tracked assessment from the session.
+**Important**: Do NOT ask the user for confidence. Compute it automatically based on tracked assessment.
 
 ## Usage
 
@@ -16,139 +16,110 @@ Complete the current interview session and update your progress.
 
 ## Behavior
 
-1. Check if session is active
+1. Check if session is active (`session.json` → `active`)
    - If not: "No active session to end."
 
-2. Read session data from `session.json`:
-   - `started_at`, `hints_given`, `mode`, `confidence_before`, `assessment`
+2. Read session data: `started_at`, `hints_given`, `mode`, `confidence_before`, `assessment`, `question_id`
+   - Get topic from session (stored during /review)
 
-3. Calculate time taken:
-   - `time_taken_mins = (now - started_at) in minutes`
+3. Calculate `time_taken_mins = (now - started_at) in minutes`
 
-4. Read the current question from `questions.json`
+4. Read question from `data/questions/{topic}.json` → find by id
 
-5. Read configuration from `data/config.json`
+5. Read `data/config.json`
 
-6. **Auto-compute confidence** using tracked assessment from session:
-
+6. **Auto-compute confidence**:
    ```python
-   # Read values from config.json
-   config = read("data/config.json")
-   base = config.confidence.base_score  # 3
-   adjustments = config.confidence.adjustments
+   adj = config.confidence.adjustments
+   score = config.confidence.base_score  # 3
 
-   # Get assessment from session.json (tracked during interview)
-   assessment = session.assessment
-   hints_given = session.hints_given
+   # Solved adjustment
+   if solved: score += adj.solved_no_help if hints==0 else adj.one_hint if hints==1 else adj.multiple_hints
+   else: score += adj.gave_up
 
-   # Start with base score
-   score = base
+   # Complexity & edge cases
+   if time_complexity_correct: score += adj.time_complexity_correct
+   if space_complexity_correct: score += adj.space_complexity_correct
+   if edge_cases_handled == True: score += adj.edge_cases_handled
+   elif edge_cases_handled == False: score += adj.edge_cases_missed
 
-   # Solved status adjustment
-   if assessment.solved:
-       if hints_given == 0:
-           score += adjustments.solved_no_help      # +1
-       elif hints_given == 1:
-           score += adjustments.one_hint            # 0
-       else:
-           score += adjustments.multiple_hints      # -1
-   else:
-       score += adjustments.gave_up                 # -2
-
-   # Complexity analysis (tracked during interview)
-   if assessment.time_complexity_correct:
-       score += adjustments.time_complexity_correct  # +0.5
-   if assessment.space_complexity_correct:
-       score += adjustments.space_complexity_correct # +0.5
-
-   # Edge cases (tracked during interview)
-   if assessment.edge_cases_handled == True:
-       score += adjustments.edge_cases_handled       # +0.5
-   elif assessment.edge_cases_handled == False:
-       score += adjustments.edge_cases_missed        # -0.5
-
-   # Time bonus/penalty (use difficulty-specific thresholds)
-   thresholds = config.time_thresholds[question.difficulty]
-   if time_taken_mins < thresholds.fast_mins:
-       score += adjustments.fast_solve               # +0.5
-   elif time_taken_mins > thresholds.slow_mins:
-       score += adjustments.slow_solve               # -0.5
+   # Time bonus/penalty
+   thresholds = config.time_thresholds[difficulty]
+   if time_taken_mins < thresholds.fast_mins: score += adj.fast_solve
+   elif time_taken_mins > thresholds.slow_mins: score += adj.slow_solve
 
    # Cap if hints used
-   if hints_given > 0:
-       score = min(score, config.confidence.max_with_hints)  # cap at 3
-
-   # Clamp to 1-5
-   confidence = max(1, min(5, round(score)))
+   if hints_given > 0: score = min(score, config.confidence.max_with_hints)
+   confidence = clamp(round(score), 1, 5)
    ```
 
-7. **Calculate next review using SM-2**:
-
+7. **Calculate SM-2 values**:
    ```python
-   quality = confidence  # 1-5 maps to quality
-
-   # Read current values from question
-   current_interval = question.interval_days
-   current_ef = question.ease_factor
-
-   # Read interval config
-   intervals = config.intervals
-
-   if quality < 3:
-       new_interval = intervals.fail_interval_days  # 1 day
+   if confidence < 3:
+       new_interval = config.intervals.fail_interval_days
    else:
-       if current_interval == 0:
-           new_interval = 1
-       elif current_interval == 1:
-           new_interval = intervals.first_success_days   # 6 days
-       elif current_interval <= intervals.first_success_days:
-           new_interval = intervals.second_success_days  # 14 days
-       else:
-           new_interval = round(current_interval * current_ef)
+       if interval_days == 0: new_interval = 1
+       elif interval_days == 1: new_interval = config.intervals.first_success_days
+       elif interval_days <= config.intervals.first_success_days: new_interval = config.intervals.second_success_days
+       else: new_interval = round(interval_days * ease_factor)
 
-   # Update ease factor (SM-2 formula)
-   new_ef = max(
-       config.sm2.min_ease_factor,
-       current_ef + (config.sm2.ease_adjustment_base - (5 - quality) * config.sm2.ease_adjustment_factor)
-   )
-
-   # Calculate next review date
-   next_review_date = today + new_interval days
+   new_ef = max(config.sm2.min_ease_factor,
+                ease_factor + config.sm2.ease_adjustment_base - (5 - confidence) * config.sm2.ease_adjustment_factor)
+   next_review_date = today + new_interval
    ```
 
-8. Update `questions.json`:
-   - Add review record to question's `reviews` array
-   - Update `confidence` to new value
-   - Update `next_review_date`
-   - Update `ease_factor` and `interval_days`
-   - Update `last_reviewed_topic` for interleaving
-   - Increment `review_count`
-   - Update `last_reviewed` to today
+8. **Update question in topic file** (`data/questions/{topic}.json`):
+   - Append review record to `reviews` array
+   - Update: `confidence`, `next_review_date`, `ease_factor`, `interval_days`, `review_count`, `last_reviewed`
 
-9. Update `goals.json`:
-   - Increment `reviews_this_week`
+9. **Update index.json**:
+    - Update entry: `{id: {t: topic, d: difficulty, c: confidence, n: next_review_date}}`
 
-10. Reset `session.json` to template state:
-    ```json
-    {
-      "active": false,
-      "question_id": null,
-      "started_at": null,
-      "hints_given": 0,
-      "mode": null,
-      "confidence_before": null,
-      "assessment": {
-        "solved": null,
-        "time_complexity_correct": null,
-        "space_complexity_correct": null,
-        "edge_cases_handled": null
-      }
-    }
+10. **Rebuild review-queue.json**:
+    ```python
+    # Read all entries from index.json
+    queue = []
+    for id, entry in index.items():
+        days_until = (entry.n - today).days
+
+        if days_until < 0:  # overdue
+            queue.append({id, topic: entry.t, priority: 1, reason: "overdue", days_overdue: -days_until})
+        elif entry.c and entry.c <= config.confidence.low_confidence_threshold:
+            queue.append({id, topic: entry.t, priority: 2, reason: "low_confidence", confidence: entry.c})
+        elif days_until == 0:
+            queue.append({id, topic: entry.t, priority: 3, reason: "due_today"})
+        elif days_until <= 3:
+            queue.append({id, topic: entry.t, priority: 4, reason: "upcoming"})
+
+    # Sort by priority, keep top 30
+    queue.sort(by: priority, then: days_overdue desc)
+    queue = queue[:30]
+
+    # Add title/difficulty from topic files (read only needed topics)
+    for item in queue:
+        q = read_question(item.topic, item.id)
+        item.title = q.title
+        item.difficulty = q.difficulty
+
+    write review-queue.json with queue, last_rebuilt=now, last_reviewed_topic=topic
     ```
 
-11. If Code Mode: Reset `solution.py` to template state
+11. **Update stats-cache.json**:
+    - Increment `reviewed_count` (if first review) or keep same
+    - Decrement `unreviewed_count` (if first review)
+    - Recalculate `due_count` from index
+    - Update `mastery_by_topic[topic]` and `mastery_by_difficulty[difficulty]`
+    - Recalculate `weakest_areas` (3 lowest mastery topics)
+    - Add to `recent_reviews` (keep last 7 days)
+    - Update `computed_at`
 
-12. Display summary:
+12. **Update goals.json**: Increment `reviews_this_week`
+
+13. **Reset session.json** to inactive state
+
+14. **If Code Mode**: Reset `solution.py` to template
+
+15. **Display summary**:
     ```
     Session Complete!
 
@@ -159,14 +130,16 @@ Complete the current interview session and update your progress.
 
     Assessment:
     ✓ Correct solution
-    ✓ Time complexity: O(n)
-    ✓ Space complexity: O(n)
-    - Missed empty input edge case
+    ✓ Time complexity correct
+    ✓ Space complexity correct
+    - Missed edge cases
 
     Next review: Jan 8, 2026 (7 days)
 
     Weekly progress: 6/10 reviews
     ```
+
+---
 
 ## Review Record Schema
 

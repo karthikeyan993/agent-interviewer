@@ -1,7 +1,13 @@
 # Personal data (contains your review history)
 data/questions.json
+data/questions.json.backup
 data/session.json
 data/goals.json
+data/review-queue.json
+data/stats-cache.json
+data/index.json
+data/questions/*.json
+!data/questions/template.json
 
 # Working solution file
 solution.py
