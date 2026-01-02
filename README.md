@@ -1,4 +1,5 @@
-# DSA Interview Prep System
+# DSA 
+Interview Prep System
 
 A spaced repetition system for DSA interview preparation. Works with both **Claude Code** and **OpenCode**.
 
@@ -26,7 +27,7 @@ Choose your platform:
 1. Clone this repository:
    ```bash
    git clone <repo-url>
-   cd interview
+   cd agent-interviewer
    ```
 
 2. Initialize your personal data files from templates:
@@ -62,7 +63,7 @@ Choose your platform:
 1. Clone this repository:
    ```bash
    git clone <repo-url>
-   cd interview
+   cd agent-interviewer
    ```
 
 2. Initialize your personal data files from templates:
