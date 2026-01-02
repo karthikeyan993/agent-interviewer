@@ -1,6 +1,10 @@
 # DSA Interview Prep System
 
-A spaced repetition system for DSA interview preparation, powered by Claude Code.
+A spaced repetition system for DSA interview preparation. Works with both **Claude Code** and **OpenCode**.
+
+Choose your platform:
+- [Claude Code Setup](#claude-code-setup) - Anthropic's CLI tool
+- [OpenCode Setup](#opencode-setup) - OpenAI's code assistant
 
 ## Features
 
@@ -12,25 +16,24 @@ A spaced repetition system for DSA interview preparation, powered by Claude Code
 
 ## Setup
 
-### Prerequisites
+### Claude Code Setup
+
+#### Prerequisites
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
 
-### Installation
+#### Installation
 
 1. Clone this repository:
    ```bash
    git clone <repo-url>
-   cd agent-interviewer
+   cd interview
    ```
 
 2. Initialize your personal data files from templates:
    ```bash
-   # Copy templates to create your data files
    cp data/questions.template.json data/questions.json
    cp data/session.template.json data/session.json
    cp data/goals.template.json data/goals.json
-
-   # Create empty solution file
    touch solution.py
    ```
 
@@ -38,6 +41,39 @@ A spaced repetition system for DSA interview preparation, powered by Claude Code
    ```bash
    claude
    ```
+
+4. Set your weekly goal:
+   ```
+   /goal 10
+   ```
+
+5. Add your first question:
+   ```
+   /add https://neetcode.io/problems/two-integer-sum
+   ```
+
+### OpenCode Setup
+
+#### Prerequisites
+- [OpenCode](https://opencode.ai/) installed
+
+#### Installation
+
+1. Clone this repository:
+   ```bash
+   git clone <repo-url>
+   cd interview
+   ```
+
+2. Initialize your personal data files from templates:
+   ```bash
+   cp data/questions.template.json data/questions.json
+   cp data/session.template.json data/session.json
+   cp data/goals.template.json data/goals.json
+   touch solution.py
+   ```
+
+3. Start OpenCode and navigate to this directory
 
 4. Set your weekly goal:
    ```
@@ -58,7 +94,10 @@ A spaced repetition system for DSA interview preparation, powered by Claude Code
 ### What's Shared (committed)
 - `data/config.json` - SM-2 algorithm settings, time thresholds, valid topics/patterns
 - `data/*.template.json` - Templates for initializing data files
-- `.claude/commands/` - Skill definitions
+- `.claude/commands/` - Skill definitions (Claude Code)
+- `.opencode/command/` - Skill definitions (OpenCode)
+- `CLAUDE.md` - Instructions for Claude Code
+- `OPENCODE.md` - Instructions for OpenCode
 
 ## Commands
 
@@ -103,13 +142,17 @@ Claude fetches the problem page and extracts title, difficulty, description, top
 
 ### Review Sessions
 
-Run `/review` to start a practice session. Claude will:
+Run `/review` to start a practice session. The system will:
 1. Select a question based on spaced repetition priority
 2. Ask you to choose a solving mode:
    - **Chat Mode**: Solve through conversation (explain approach, pseudocode, verbal walkthrough)
    - **Code Mode**: Code in `solution.py` with full interview experience
 3. Present the problem as an interviewer would
 4. Probe on time/space complexity, edge cases, and trade-offs
+
+**Platform note**: Mode selection differs between platforms:
+- **Claude Code**: Uses interactive question prompt
+- **OpenCode**: Use `/review --mode=chat` or `/review --mode=code` flag, or reply to prompt
 
 ### Solving Modes
 
@@ -143,14 +186,18 @@ Use `/hint` during a session for progressive hints. Using hints caps your maximu
 ```
 interview/
 ├── .claude/
-│   └── commands/     # Skill definitions
+│   └── commands/         # Skill definitions (Claude Code)
+├── .opencode/
+│   └── command/          # Skill definitions (OpenCode)
 ├── data/
 │   ├── questions.json    # Your question bank (gitignored)
 │   ├── session.json      # Active session state (gitignored)
 │   ├── goals.json        # Weekly goals (gitignored)
-│   └── config.json       # Configuration (SM-2 params, thresholds, valid values)
+│   ├── config.json       # Configuration (SM-2 params, thresholds, valid values)
+│   └── *.template.json   # Templates for data files
 ├── solution.py           # Your working solution file (gitignored)
-├── CLAUDE.md             # Instructions for Claude
+├── CLAUDE.md             # Instructions for Claude Code
+├── OPENCODE.md           # Instructions for OpenCode
 └── README.md
 ```
 
@@ -212,6 +259,45 @@ Questions are selected based on:
 4. Random selection from remaining
 
 Intervals adjust based on your performance using the SM-2 algorithm.
+
+## Platform-Specific Notes
+
+### Cross-Platform Compatibility
+
+Both Claude Code and OpenCode work with the same data files (`data/*.json`), so you can:
+- Start a session in one platform and continue in another
+- Use `/stats` on either platform to see identical progress
+- Add questions in one and review in the other
+
+**Data always stays in sync** because both platforms read/write the same JSON files.
+
+### Key Differences
+
+#### Command Directory Location
+- **Claude Code**: `.claude/commands/`
+- **OpenCode**: `.opencode/command/`
+
+#### Tool Naming
+- **Claude Code**: `WebFetch`, `Read`, `Write`, `Edit`, `Bash`
+- **OpenCode**: `webfetch`, `read`, `write`, `edit`, `bash` (all lowercase)
+
+#### /review Mode Selection
+- **Claude Code**: Interactive prompt with options
+  ```
+  /review                # Prompted to choose mode
+  ```
+
+- **OpenCode**: Flag-based or manual prompt
+  ```
+  /review --mode=chat    # Explicit mode selection
+  /review --mode=code    # Explicit mode selection
+  /review                # Prompted to reply with mode choice
+  /review dp --mode=code # Filter + explicit mode
+  ```
+
+For detailed platform-specific documentation:
+- See `CLAUDE.md` for Claude Code details
+- See `OPENCODE.md` for OpenCode details
 
 ## License
 
