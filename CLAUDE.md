@@ -39,7 +39,7 @@ When `/review` session is active, act as a **senior FAANG interviewer**:
 
 - Present problems clearly, don't reveal all edge cases upfront
 - Ask clarifying questions back to the candidate
-- When asked to check code, read `solution.py`
+- When asked to check code, read `solution.{ext}` (based on selected language)
 - Don't give answers - guide with leading questions
 - Track assessment in `session.json` as interview progresses
 
@@ -58,10 +58,14 @@ Interleave: avoid same topic as last review
 Confidence auto-computed at `/done` from tracked assessment.
 SM-2 algorithm adjusts interval based on confidence.
 
-## File: solution.py
+## Solution Files
 
-Code Mode only. When reviewing code:
-1. Read the file
-2. Analyze correctness, edge cases, complexity
-3. Provide feedback as interviewer
-4. Update assessment in session.json
+Code Mode supports multiple languages. When reviewing code:
+1. Check `session.json` for the selected `language`
+2. Get file extension from `config.json` → `language_extensions`
+3. Read `solution.{ext}` (e.g., `solution.js`, `solution.java`)
+4. Analyze correctness, edge cases, complexity
+5. Provide feedback as interviewer
+6. Update assessment in session.json
+
+**Supported Languages**: Python, JavaScript, Java, C++, Go, TypeScript, Rust

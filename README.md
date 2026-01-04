@@ -14,6 +14,7 @@ Choose your platform:
 - **Progress Tracking**: Track confidence levels and review history
 - **Hint System**: Progressive hints that affect scoring
 - **Topic Interleaving**: Avoid clustering same topics together
+- **Multi-Language Support**: Code in Python, JavaScript, Java, C++, Go, TypeScript, or Rust
 
 ## Setup
 
@@ -97,7 +98,7 @@ Choose your platform:
 - `data/stats-cache.json` - Pre-computed mastery statistics
 - `data/session.json` - Current session state
 - `data/goals.json` - Your weekly goals and progress
-- `solution.py` - Your working solution file
+- `solution.*` - Your working solution file (language-specific, e.g., `solution.py`, `solution.js`)
 
 ### What's Shared (committed)
 - `data/config.json` - SM-2 algorithm settings, time thresholds, valid topics/patterns
@@ -126,10 +127,11 @@ Choose your platform:
 1. Solve a problem on [NeetCode](https://neetcode.io)
 2. Add it: `/add https://neetcode.io/problems/...`
 3. Later, start a review session: `/review` or `/review dp`
-4. Choose your mode: **Chat** (conversational) or **Code** (`solution.py`)
-5. Solve the problem with Claude acting as interviewer
-6. Use `/hint` if stuck (caps max confidence at 3)
-7. End with `/done` to record your performance
+4. Choose your mode: **Chat** (conversational) or **Code** (`solution.*`)
+5. If Code mode, select your language (Python, JavaScript, Java, C++, Go, TypeScript, Rust)
+6. Solve the problem with Claude acting as interviewer
+7. Use `/hint` if stuck (caps max confidence at 3)
+8. End with `/done` to record your performance
 8. Check progress with `/stats`
 
 ## How It Works
@@ -171,7 +173,8 @@ Run `/review` to start a practice session. The system will:
 - Great for conceptual review or when away from IDE
 
 **Code Mode**
-- Write your solution in `solution.py`
+- Write your solution in `solution.*` (file extension based on language)
+- Supported languages: **Python**, **JavaScript**, **Java**, **C++**, **Go**, **TypeScript**, **Rust**
 - Ask Claude to review your code when ready
 - Still get asked about complexity and edge cases
 
@@ -211,7 +214,7 @@ agent-interviewer/
 │   ├── goals.json        # Weekly goals (gitignored)
 │   ├── config.json       # Configuration (SM-2 params, thresholds)
 │   └── *.template.json   # Templates for data files
-├── solution.py           # Your working solution file (gitignored)
+├── solution.*            # Your working solution file (gitignored)
 ├── CLAUDE.md             # Instructions for Claude Code
 ├── OPENCODE.md           # Instructions for OpenCode
 └── README.md
@@ -320,9 +323,16 @@ Both Claude Code and OpenCode work with the same data files (`data/*.json`), so 
   ```
   /review --mode=chat    # Explicit mode selection
   /review --mode=code    # Explicit mode selection
+  /review --mode=code --lang=python  # Mode + language
+  /review --mode=code --lang=javascript  # Use JavaScript
   /review                # Prompted to reply with mode choice
   /review dp --mode=code # Filter + explicit mode
   ```
+
+#### Language Selection
+- **Claude Code**: Interactive prompt after selecting Code mode
+- **OpenCode**: Use `--lang=<language>` flag or reply when prompted
+  - Options: `python`, `javascript`, `java`, `cpp`, `go`, `typescript`, `rust`
 
 For detailed platform-specific documentation:
 - See `CLAUDE.md` for Claude Code details

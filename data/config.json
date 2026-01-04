@@ -28,9 +28,18 @@
     }
   },
   "time_thresholds": {
-    "easy": { "fast_mins": 5, "slow_mins": 20 },
-    "medium": { "fast_mins": 15, "slow_mins": 45 },
-    "hard": { "fast_mins": 25, "slow_mins": 60 }
+    "easy": {
+      "fast_mins": 5,
+      "slow_mins": 20
+    },
+    "medium": {
+      "fast_mins": 15,
+      "slow_mins": 45
+    },
+    "hard": {
+      "fast_mins": 25,
+      "slow_mins": 60
+    }
   },
   "week": {
     "start_day": "monday"
@@ -41,19 +50,67 @@
   },
   "valid_values": {
     "topics": [
-      "arrays", "strings", "trees", "graphs", "dp", "linked-list",
-      "stack", "queue", "heap", "hash-map", "binary-search",
-      "backtracking", "greedy", "math", "bit-manipulation"
+      "arrays",
+      "strings",
+      "trees",
+      "graphs",
+      "dp",
+      "linked-list",
+      "stack",
+      "queue",
+      "heap",
+      "hash-map",
+      "binary-search",
+      "backtracking",
+      "greedy",
+      "math",
+      "bit-manipulation"
     ],
     "patterns": [
-      "two-pointers", "sliding-window", "fast-slow-pointers",
-      "merge-intervals", "cyclic-sort", "bfs", "dfs",
-      "binary-search", "top-k", "monotonic-stack"
+      "two-pointers",
+      "sliding-window",
+      "fast-slow-pointers",
+      "merge-intervals",
+      "cyclic-sort",
+      "bfs",
+      "dfs",
+      "binary-search",
+      "top-k",
+      "monotonic-stack"
     ],
-    "difficulties": ["easy", "medium", "hard"],
+    "difficulties": [
+      "easy",
+      "medium",
+      "hard"
+    ],
     "companies": [
-      "google", "meta", "amazon", "apple", "microsoft",
-      "netflix", "uber", "airbnb", "linkedin"
+      "google",
+      "meta",
+      "amazon",
+      "apple",
+      "microsoft",
+      "netflix",
+      "uber",
+      "airbnb",
+      "linkedin"
+    ],
+    "languages": [
+      "python",
+      "javascript",
+      "java",
+      "cpp",
+      "go",
+      "typescript",
+      "rust"
     ]
+  },
+  "language_extensions": {
+    "python": ".py",
+    "javascript": ".js",
+    "java": ".java",
+    "cpp": ".cpp",
+    "go": ".go",
+    "typescript": ".ts",
+    "rust": ".rs"
   }
 }

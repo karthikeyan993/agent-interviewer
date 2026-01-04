@@ -16,7 +16,9 @@ Begin a mock FAANG interview session with a question from your bank.
 /review sliding-window      # Filter by pattern
 /review --mode=chat         # Explicitly use chat mode
 /review --mode=code         # Explicitly use code mode
-/review dp --mode=code      # Combine topic filter with mode
+/review --lang=python       # Use Python for code mode
+/review --lang=javascript   # Use JavaScript for code mode
+/review dp --mode=code --lang=java  # Combine filters with mode and language
 ```
 
 **Argument**: $ARGUMENTS
@@ -32,6 +34,7 @@ Read valid values from `data/config.json` → `valid_values`:
 - If matches **company**: filter by company (requires reading topic files)
 - If contains `--mode=chat`: Use Chat Mode
 - If contains `--mode=code`: Use Code Mode
+- If contains `--lang=<language>`: Use specified language (python, javascript, java, cpp, go, typescript, rust)
 
 Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, linkedlist→linked-list, dynamic programming→dp
 
@@ -83,7 +86,13 @@ Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, l
    - If `--mode=code`: Use Code Mode
    - Otherwise: Ask user to reply with "chat" or "code"
 
-8. **Update session.json**:
+8. **If Code Mode, determine language**:
+   - If `--lang=<language>` provided: Use specified language
+   - Otherwise: Ask user to reply with language (python, javascript, java, cpp, go, typescript, rust)
+   - Get file extension from `config.json` → `language_extensions`
+   - Solution file will be `solution.{ext}` (e.g., `solution.js`)
+
+9. **Update session.json**:
    ```json
    {
      "active": true,
@@ -92,6 +101,7 @@ Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, l
      "started_at": "<ISO timestamp>",
      "hints_given": 0,
      "mode": "chat|code",
+     "language": "<selected language or null if chat mode>",
      "confidence_before": <current confidence or null>,
      "assessment": {
        "solved": null,
@@ -102,9 +112,9 @@ Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, l
    }
    ```
 
-9. **If Code Mode**: Update `solution.py` header with problem info
+10. **If Code Mode**: Update `solution.{ext}` header with problem info (using language-specific comment syntax)
 
-10. **Present problem as FAANG interviewer**:
+11. **Present problem as FAANG interviewer**:
     - State problem clearly
     - Ask: "Before we start, any clarifying questions?"
     - Don't reveal all constraints upfront
@@ -123,7 +133,7 @@ Act as a senior FAANG interviewer:
 - Probe complexity and edge cases
 
 ### Code Mode
-- When asked to review code, read `solution.py` and give feedback
+- When asked to review code, read `solution.{ext}` (based on session.language) and give feedback
 - Ask about complexity, edge cases, trade-offs
 - Let them code at their pace
 

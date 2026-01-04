@@ -113,7 +113,9 @@ Complete the current interview session and update your progress.
 
 14. **Reset session.json** to inactive state
 
-15. **If Code Mode**: Reset `solution.py` to template
+15. **If Code Mode**: Reset solution file to template
+    - Get extension from `config.json` → `language_extensions[session.language]`
+    - Reset `solution.{ext}` (e.g., `solution.js` for JavaScript)
 
 16. **Display summary**:
     ```

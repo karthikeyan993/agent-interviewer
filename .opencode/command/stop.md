@@ -37,7 +37,9 @@ Cancel the current interview session without affecting your stats or review sche
    }
    ```
 
-3. If Code Mode was active: Optionally clear `solution.py` (leave as-is if user might want to keep their work)
+3. If Code Mode was active: Optionally clear the solution file (leave as-is if user might want to keep their work)
+   - Get extension from `config.json` → `language_extensions[session.language]`
+   - File will be `solution.{ext}` (e.g., `solution.js` for JavaScript)
 
 4. Display confirmation:
    ```

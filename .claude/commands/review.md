@@ -71,30 +71,38 @@ Topic aliases: array→arrays, string→strings, tree→trees, graph→graphs, l
 
 8. **Ask mode selection** (Chat or Code):
    - Chat: Solve through conversation
-   - Code: Code in `solution.py`
+   - Code: Code in solution file
 
-9. **Update session.json**:
-   ```json
-   {
-     "active": true,
-     "question_id": "<id>",
-     "topic": "<topic>",
-     "started_at": "<ISO timestamp>",
-     "hints_given": 0,
-     "mode": "chat|code",
-     "confidence_before": <current confidence or null>,
-     "assessment": {
-       "solved": null,
-       "time_complexity_correct": null,
-       "space_complexity_correct": null,
-       "edge_cases_handled": null
-     }
-   }
-   ```
+9. **If Code Mode, ask language selection**:
+   - Read supported languages from `config.json` → `valid_values.languages`
+   - Ask: "Which language would you like to use?" and show options:
+     - Python, JavaScript, Java, C++, Go, TypeScript, Rust
+   - Get file extension from `config.json` → `language_extensions`
+   - Solution file will be `solution.{ext}` (e.g., `solution.js`)
 
-10. **If Code Mode**: Update `solution.py` header with problem info
+10. **Update session.json**:
+    ```json
+    {
+      "active": true,
+      "question_id": "<id>",
+      "topic": "<topic>",
+      "started_at": "<ISO timestamp>",
+      "hints_given": 0,
+      "mode": "chat|code",
+      "language": "<selected language or null if chat mode>",
+      "confidence_before": <current confidence or null>,
+      "assessment": {
+        "solved": null,
+        "time_complexity_correct": null,
+        "space_complexity_correct": null,
+        "edge_cases_handled": null
+      }
+    }
+    ```
 
-11. **Present problem as FAANG interviewer**:
+11. **If Code Mode**: Update `solution.{ext}` header with problem info (using language-specific comment syntax)
+
+12. **Present problem as FAANG interviewer**:
     - State problem clearly
     - Ask: "Before we start, any clarifying questions?"
     - Don't reveal all constraints upfront
@@ -113,7 +121,7 @@ Act as a senior FAANG interviewer:
 - Probe complexity and edge cases
 
 ### Code Mode
-- When asked to review code, read `solution.py` and give feedback
+- When asked to review code, read `solution.{ext}` (based on session.language) and give feedback
 - Ask about complexity, edge cases, trade-offs
 - Let them code at their pace
 

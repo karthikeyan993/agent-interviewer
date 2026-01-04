@@ -5,6 +5,7 @@
   "started_at": null,
   "hints_given": 0,
   "mode": null,
+  "language": null,
   "confidence_before": null,
   "assessment": {
     "solved": null,
